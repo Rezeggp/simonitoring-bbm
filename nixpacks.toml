@@ -1,0 +1,5 @@
+[phases.setup]
+nixPKgs = ["php82", "php82Extensions.pdo", "php82Extensions.pdo_mysql", "php82Extensions.mbstring", "php82Extensions.tokenizer", "php82Extensions.xml", "php82Extensions.ctype", "php82Extensions.bcmath", "composer"]
+
+[start]
+cmd = "php artisan migrate --force && php artisan db:

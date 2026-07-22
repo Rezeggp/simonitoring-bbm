@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('stok_depots', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('depot_id')->constrained('depots')->cascadeOnDelete();
+            $table->foreignId('jenis_bbm_id')->constrained('jenis_bbms')->cascadeOnDelete();
+            $table->decimal('jumlah_stok', 14, 2)->default(0);
+            $table->decimal('kapasitas_tangki', 14, 2)->default(0);
+            $table->decimal('stok_minimum', 14, 2)->default(0);
+            $table->timestamps();
+            $table->unique(['depot_id', 'jenis_bbm_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('stok_depots');
+    }
+};
