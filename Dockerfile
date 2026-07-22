@@ -1,18 +1,20 @@
-FROM php:8.3-alpine
+FROM php:8.3-apache
 
-# Install sistem dasar yang dibutuhkan Laravel
-RUN apk add --no-cache libpng-dev libzip-dev zip unzip
+# Install kebutuhan dasar
+RUN apt-get update && apt-get install -y libpng-dev libzip-dev zip unzip
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql gd zip
+# KUNCI UTAMA: Matikan SEMUA modul MPM yang mungkin bentrok, lalu aktifkan satu saja (prefork)
+RUN a2dismod mpm_event mpm_worker mpm_event && a2enmod mpm_prefork rewrite
 
-# Copy semua file ke dalam server
-WORKDIR /var/www/html
-COPY . .
+# Arahkan ke folder public
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
-# Install composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader
+# Copy data
+COPY . /var/www/html
+RUN chown -R www-data:www-data /var/www/html
 
-# Jalankan server bawaan Laravel (Tanpa Apache!)
-CMD php artisan serve --host=0.0.0.0 --port=$PORT
+# Port
+EXPOSE 80
+
+# Jalankan Apache
+CMD ["apache2-foreground"]
