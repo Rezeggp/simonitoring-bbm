@@ -1,21 +1,17 @@
-# Menggunakan image PHP resmi
-FROM php:8.2-apache
+FROM php:8.3-apache
 
-# Install ekstensi PHP yang dibutuhkan Laravel
+# 1. Install dependensi dasar yang dibutuhkan Laravel
 RUN apt-get update && apt-get install -y libpng-dev libzip-dev zip unzip
-RUN docker-php-ext-install pdo_mysql gd zip
 
-# Set folder kerja
-WORKDIR /var/www/html
+# 2. Aktifkan modul Apache yang benar dan matikan yang bentrok
+RUN a2dismod mpm_event mpm_worker && a2enmod mpm_prefork rewrite
 
-# Copy project ke dalam container
-COPY . .
-
-# Set permission agar Laravel bisa menulis ke folder storage
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Ubah konfigurasi Apache ke folder public
+# 3. Arahkan DocumentRoot ke folder 'public' (khas Laravel)
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
-# Aktifkan mod_rewrite untuk route Laravel
-RUN a2enmod rewrite
+# 4. Set permission agar bisa dibaca server
+COPY . /var/www/html
+RUN chown -R www-data:www-data /var/www/html
+
+# 5. Jalankan Apache di foreground
+CMD ["apache2-foreground"]
