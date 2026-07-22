@@ -1,17 +1,18 @@
-FROM php:8.3-apache
+FROM php:8.3-alpine
 
-# 1. Install dependensi dasar yang dibutuhkan Laravel
-RUN apt-get update && apt-get install -y libpng-dev libzip-dev zip unzip
+# Install sistem dasar yang dibutuhkan Laravel
+RUN apk add --no-cache libpng-dev libzip-dev zip unzip
 
-# 2. Aktifkan modul Apache yang benar dan matikan yang bentrok
-RUN a2dismod mpm_event mpm_worker && a2enmod mpm_prefork rewrite
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql gd zip
 
-# 3. Arahkan DocumentRoot ke folder 'public' (khas Laravel)
-RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+# Copy semua file ke dalam server
+WORKDIR /var/www/html
+COPY . .
 
-# 4. Set permission agar bisa dibaca server
-COPY . /var/www/html
-RUN chown -R www-data:www-data /var/www/html
+# Install composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN composer install --no-dev --optimize-autoloader
 
-# 5. Jalankan Apache di foreground
-CMD ["apache2-foreground"]
+# Jalankan server bawaan Laravel (Tanpa Apache!)
+CMD php artisan serve --host=0.0.0.0 --port=$PORT
